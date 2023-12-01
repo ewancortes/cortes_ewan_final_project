@@ -16,3 +16,5 @@ player gets off screen
 
 The player gets off screen by staying still as the ground moves (left) or player moves right
 ''' 
+
+# dioisgh;ioa shgaskl 

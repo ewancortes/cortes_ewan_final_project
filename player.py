@@ -1,96 +1,77 @@
-from math import copysign
-from pygame.math import Vector2
-from pygame.locals import KEYDOWN,KEYUP,K_LEFT,K_RIGHT
-from pygame.sprite import collide_rect
-from pygame.event import Event
+import pygame as pg
+from settings import *
 
-from singleton import Singleton
-from pygame import sprite as Sprite
-from level import Level
-import settings as config
+pg.init()
 
-getsign = lambda x : copysign(1, x)
+class Dinosaur:
 
-class Player(Sprite, Singleton):
-	def __init__(self,*args):
-		Sprite.__init__(self,*args)
-		self.__startrect = self.rect.copy()
-		self.__maxvelocity = Vector2(config.PLAYER_MAX_SPEED,100)
-		self.__startspeed = 1.5
+    X_POS = 80
+    Y_POS = 310
+    Y_POS_DUCK = 340
+    JUMP_VEL = 8.5
 
-		self._velocity = Vector2()
-		self._input = 0
-		self._jumpforce = config.PLAYER_JUMPFORCE
-		self._bonus_jumpforce = config.PLAYER_BONUS_JUMPFORCE
+    def __init__(self):
+        self.duck_img = DUCKING
+        self.run_img = RUNNING
+        self.jump_img = JUMPING
 
-		self.gravity = config.GRAVITY
-		self.accel = .5
-		self.deccel = .6
-		self.dead = False
-	
-	def fix_velocity(self) -> None:
-		self._velocity.y = min(self._velocity.y,self.__maxvelocity.y)
-		self._velocity.y = round(max(self._velocity.y,-self.__maxvelocity.y),2)
-		self._velocity.x = min(self._velocity.x,self.__maxvelocity.x)
-		self._velocity.x = round(max(self._velocity.x,-self.__maxvelocity.x),2)
+        self.dino_duck = False
+        self.dino_run = True
+        self.dino_jump = False
 
-    
-	def reset(self) -> None:
-		self._velocity = Vector2()
-		self.rect = self.__startrect.copy()
-		self.camera_rect = self.__startrect.copy()
-		self.dead = False
+        self.step_index = 0
+        self.jump_vel = self.JUMP_VEL
+        self.image = self.run_img[0]
+        self.dino_rect = self.image.get_rect()
+        self.dino_rect.x = self.X_POS
+        self.dino_rect.y = self.Y_POS
 
+    def update(self, userInput):
+        if self.dino_duck:
+            self.duck()
+        if self.dino_run:
+            self.run()
+        if self.dino_jump:
+            self.jump()
 
-	def handle_event(self,event:Event) -> None:
-		if event.type == KEYDOWN:
-			if event.key == K_LEFT:
-				self._velocity.x=-self.__startspeed
-				self._input = -1
-			elif event.key == K_RIGHT:
-				self._velocity.x=self.__startspeed
-				self._input = 1
-		elif event.type == KEYUP:
-			if (event.key== K_LEFT and self._input==-1) or (
-					event.key==K_RIGHT and self._input==1):
-				self._input = 0
-	
-	def jump(self,force:float=None) -> None:
-		if not force:force = self._jumpforce
-		self._velocity.y = -force
+        if self.step_index >= 10:
+            self.step_index = 0
 
+        if (userInput[pg.K_UP] or userInput[pg.K_SPACE]) and not self.dino_jump:
+            self.dino_duck = False
+            self.dino_run = False
+            self.dino_jump = True
+        elif userInput[pg.K_DOWN] and not self.dino_jump:
+            self.dino_duck = True
+            self.dino_run = False
+            self.dino_jump = False
+        elif not (self.dino_jump or userInput[pg.K_DOWN]):
+            self.dino_duck = False
+            self.dino_run = True
+            self.dino_jump = False
 
-	def onCollide(self, obj:Sprite) -> None:
-		self.rect.bottom = obj.rect.top
-		self.jump()
-	
+    def duck(self):
+        self.image = self.duck_img[self.step_index // 5]
+        self.dino_rect = self.image.get_rect()
+        self.dino_rect.x = self.X_POS
+        self.dino_rect.y = self.Y_POS_DUCK
+        self.step_index += 1
 
-	def collisions(self) -> None:
-		lvl = Level.instance
-		if not lvl: return
-		for platform in lvl.platforms:
-			if self._velocity.y > .5:
-				if platform.bonus and collide_rect(self,platform.bonus):
-					self.onCollide(platform.bonus)
-					self.jump(platform.bonus.force)
+    def run(self):
+        self.image = self.run_img[self.step_index // 5]
+        self.dino_rect = self.image.get_rect()
+        self.dino_rect.x = self.X_POS
+        self.dino_rect.y = self.Y_POS
+        self.step_index += 1
 
-				if collide_rect(self,platform):
-					self.onCollide(platform)
-					platform.onCollide()
+    def jump(self):
+        self.image = self.jump_img
+        if self.dino_jump:
+            self.dino_rect.y -= self.jump_vel * 4
+            self.jump_vel -= 0.8
+        if self.jump_vel < -self.JUMP_VEL:
+            self.dino_jump = False
+            self.jump_vel = self.JUMP_VEL
 
-	def update(self) -> None:
-		if self.camera_rect.y>config.YWIN*2:
-			self.dead = True
-			return
-		self._velocity.y += self.gravity
-		if self._input:
-			self._velocity.x += self._input*self.accel
-		elif self._velocity.x:
-			self._velocity.x -= getsign(self._velocity.x)*self.deccel
-			self._velocity.x = round(self._velocity.x)
-		self._fix_velocity()
-
-		self.rect.x = (self.rect.x+self._velocity.x)%(config.XWIN-self.rect.width)
-		self.rect.y += self._velocity.y
-
-		self.collisions()
+    def draw(self, SCREEN):
+        SCREEN.blit(self.image, (self.dino_rect.x, self.dino_rect.y))

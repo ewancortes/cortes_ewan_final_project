@@ -1,110 +1,177 @@
-# This file was created by Ewan Cortes
-
-# TITLE = Soldier Runner
-
-# Goals
-'''
-Create a game like the google dinasour game in which the player has to make it
-as far as possible along the track going right
-
-However, change the overall design and add mobs
-
-Mobs will try to attack the player as he moves across the screen
-
-The player will be able to shoot at the mobs but will have to do so before the 
-player gets off screen
-
-The player gets off screen by staying still as the ground moves (left) or player moves right
-''' 
+# !/usr/bin/python
+# -*- coding: utf-8 -*-
+import datetime
+import os
+import random
+import threading
 
 import pygame as pg
-from singleton import Singleton
-from camera import Camera
-from level import *
-import settings as config
+from settings import *
+from sprites import Cloud, Obstacle, SmallCactus, LargeCactus, Bird
+from player import *
+
+pg.init()
+
+def main():
+    global game_speed, x_pos_bg, y_pos_bg, points, obstacles
+    run = True
+    clock = pg.time.Clock()
+    player = Dinosaur()
+    cloud = Cloud()
+    game_speed = 20
+    x_pos_bg = 0
+    y_pos_bg = 380
+    points = 0
+    font = pg.font.Font("freesansbold.ttf", 20)
+    obstacles = []
+    death_count = 0
+    pause = False
+
+    def score():
+        global points, game_speed
+        points += 1
+        if points % 100 == 0:
+            game_speed += 1
+        current_time = datetime.datetime.now().hour
+        with open("score.txt", "r") as f:
+            score_ints = [int(x) for x in f.read().split()]  
+            highscore = max(score_ints)
+            if points > highscore:
+                highscore=points 
+            text = font.render("High Score: "+ str(highscore) + "  Points: " + str(points), True, FONT_COLOR)
+        textRect = text.get_rect()
+        textRect.center = (900, 40)
+        SCREEN.blit(text, textRect)
+
+    def background():
+        global x_pos_bg, y_pos_bg
+        image_width = BG.get_width()
+        SCREEN.blit(BG, (x_pos_bg, y_pos_bg))
+        SCREEN.blit(BG, (image_width + x_pos_bg, y_pos_bg))
+        if x_pos_bg <= -image_width:
+            SCREEN.blit(BG, (image_width + x_pos_bg, y_pos_bg))
+            x_pos_bg = 0
+        x_pos_bg -= game_speed
+
+    def unpause():
+        nonlocal pause, run
+        pause = False
+        run = True
+
+    def paused():
+        nonlocal pause
+        pause = True
+        font = pg.font.Font("freesansbold.ttf", 30)
+        text = font.render("Game Paused, Press 'u' to Unpause", True, FONT_COLOR)
+        textRect = text.get_rect()
+        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT  // 3)
+        SCREEN.blit(text, textRect)
+        pg.display.update()
+
+        while pause:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    quit()
+                if event.type == pg.KEYDOWN and event.key == pg.K_u:
+                    unpause()
+
+    while run:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                run = False
+            if event.type == pg.KEYDOWN and event.key == pg.K_p:
+                run = False
+                paused()
+
+        current_time = datetime.datetime.now().hour
+        if 7 < current_time < 19:
+            SCREEN.fill((255, 255, 255))
+        else:
+            SCREEN.fill((0, 0, 0))
+        userInput = pg.key.get_pressed()
+
+        player.draw(SCREEN)
+        player.update(userInput)
+
+        if len(obstacles) == 0:
+            if random.randint(0, 2) == 0:
+                obstacles.append(SmallCactus(SMALL_CACTUS))
+            elif random.randint(0, 2) == 1:
+                obstacles.append(LargeCactus(LARGE_CACTUS))
+            elif random.randint(0, 2) == 2:
+                obstacles.append(Bird(BIRD))
+
+        for obstacle in obstacles:
+            obstacle.draw(SCREEN)
+            obstacle.update()
+            if player.dino_rect.colliderect(obstacle.rect):
+                pg.time.delay(2000)
+                death_count += 1
+                menu(death_count)
+
+        background()
+
+        cloud.draw(SCREEN)
+        cloud.update()
+
+        score()
+
+        clock.tick(30)
+        pg.display.update()
 
 
-class game(Singleton):
-    def __init__(self) -> None:
-        self.alive = True
-        self.window = pg.display.set_mode(config.DISPLAY,config.FLAGS)
-		self.clock = pg.time.Clock()
-        self.camera = Camera()
-		self.lvl = Level()
-		self.player = Player(
-			config.HALF_XWIN - config.PLAYER_SIZE[0]/2,# X POS
-			config.HALF_YWIN + config.HALF_YWIN/2,#      Y POS
-			*config.PLAYER_SIZE,# SIZE
-			config.PLAYER_COLOR#  COLOR
-		)
+def menu(death_count):
+    global points
+    global FONT_COLOR
+    run = True
+    while run:
+        current_time = datetime.datetime.now().hour
+        if 7 < current_time < 19:
+            FONT_COLOR=(0,0,0)
+            SCREEN.fill((255, 255, 255))
+        else:
+            FONT_COLOR=(255,255,255)
+            SCREEN.fill((128, 128, 128))
+        font = pg.font.Font("freesansbold.ttf", 30)
 
-        self.score_pos = pg.math.Vector2(10,10)
-
-		self.gameover_txt = config.LARGE_FONT.render("Game Over",1,config.GRAY)
-		self.gameover_rect = self.gameover_txt.get_rect(
-			center=(config.HALF_XWIN,config.HALF_YWIN))
-		
-        def close(self):
-		self.alive = False
-		
-
-        def reset(self):
-		self.camera.reset()
-		self.lvl.reset()
-		self.player.reset()
-		
-        def events(self):
-		########## User Events ##########
-		for event in pg.event.get():
-			if event.type == pg.QUIT:
-				self.close()
-			elif event.type == pg.KEYDOWN:
-				if event.key == pg.K_ESCAPE:
-					self.close()
-				if event.key == pg.K_RETURN and self.player.dead:
-					self.reset()
-			self.player.handle_event(event)
-			
-        # Sets up how the game updates
-	def update(self):
-		########## UPDATE ##########
-		self.player.update()
-		self.lvl.update()
-
-		if not self.player.dead:
-			self.camera.update(self.player.rect)
-			# This will calculate score and update UI txt
-			self.score = - self.camera.state.y//50
-			self.score_txt = config.SMALL_FONT.render(
-				str(self.score)+" m", 1, config.GRAY)
-	
-    # Sets up the display
-	def render(self):
-		self.window.fill(config.YELLOW)
-		self.lvl.draw(self.window)
-		self.player.draw(self.window)
-
-		# This is more user interface
-		if self.player.dead:
-			self.window.blit(self.gameover_txt,self.gameover_rect)# gameover txt
-		self.window.blit(self.score_txt, self.score_pos)# score txt
-
-		pg.display.update()# This will allow the window to update allowing for camera scrolling
-		self.clock.tick(config.FPS)# This sets up the tick rate and FPS
-
-    # Set up the main game loop
-	def run(self):
-		############### MAIN GAME LOOP ###############
-        while self.__alive:
-			self._event_loop()
-			self._update_loop()
-			self._render_loop()
-		pg.quit()
+        if death_count == 0:
+            text = font.render("Press any Key to Start", True, FONT_COLOR)
+        elif death_count > 0:
+            text = font.render("Press any Key to Restart", True, FONT_COLOR)
+            score = font.render("Your Score: " + str(points), True, FONT_COLOR)
+            scoreRect = score.get_rect()
+            scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
+            SCREEN.blit(score, scoreRect)
+            f = open("score.txt", "a")
+            f.write(str(points) + "\n")
+            f.close()
+            with open("score.txt", "r") as f:
+                score = (
+                    f.read()
+                )  # Read all file in case values are not on a single line
+                score_ints = [int(x) for x in score.split()]  # Convert strings to ints
+            highscore = max(score_ints)  # sum all elements of the list
+            hs_score_text = font.render(
+                "High Score : " + str(highscore), True, FONT_COLOR
+            )
+            hs_score_rect = hs_score_text.get_rect()
+            hs_score_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100)
+            SCREEN.blit(hs_score_text, hs_score_rect)
+        textRect = text.get_rect()
+        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        SCREEN.blit(text, textRect)
+        SCREEN.blit(RUNNING[0], (SCREEN_WIDTH // 2 - 20, SCREEN_HEIGHT // 2 - 140))
+        pg.display.update()
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                run = False
+                pg.display.quit()
+                pg.quit()
+                exit()
+            if event.type == pg.KEYDOWN:
+                main()
 
 
-
-# This starts the game through this "if" statement
-if __name__ == "__main__":
-	########## PROGRAM STARTS HERE ##########
-	game = Game()
-	game.run()
+t1 = threading.Thread(target=menu(death_count=0), daemon=True)
+t1.start()

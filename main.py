@@ -1,142 +1,118 @@
-import pygame as pg
+import pygame
 from pygame.locals import *
 import os
 import sys
 import math
-import random
-from player import player
-from sprites import wall, spike
-from settings import *
 
-pg.init()
+pygame.init()
 
-clock = pg.time.Clock()
+W, H = 1920, 1080
+win = pygame.display.set_mode((W,H))
+pygame.display.set_caption('Side Scroller')
 
-def updateFile():
-    f = open('scores.txt','r')
-    file = f.readlines()
-    last = int(file[0])
+bg = pygame.image.load(os.path.join('images','bg.png')).convert()
+bgX = 0
+bgX2 = bg.get_width()
 
-    if last < int(score):
-        f.close()
-        file = open('scores.txt', 'w')
-        file.write(str(score))
-        file.close()
+clock = pygame.time.Clock()
 
-        return score
-               
-    return last
+class player(object):
+    run = [pygame.image.load(os.path.join('images', str(x) + '.png')) for x in range(8,16)]
+    jump = [pygame.image.load(os.path.join('images', str(x) + '.png')) for x in range(1,8)]
+    slide = [pygame.image.load(os.path.join('images', 'S1.png')),pygame.image.load(os.path.join('images', 'S2.png')),pygame.image.load(os.path.join('images', 'S2.png')),pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S2.png')),pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S3.png')), pygame.image.load(os.path.join('images', 'S4.png')), pygame.image.load(os.path.join('images', 'S5.png'))]
+    jumpList = [1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-2,-2,-2,-2,-2,-2,-2,-2,-2,-2,-2,-2,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-4,-4,-4,-4,-4,-4,-4,-4,-4,-4,-4,-4]
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.jumping = False
+        self.sliding = False
+        self.slideCount = 0
+        self.jumpCount = 0
+        self.runCount = 0
+        self.slideUp = False
 
-
-
-def endScreen():
-    global pause, score, speed, obstacles
-    pause = 0
-    speed = 30
-    obstacles = []
-                   
-    run = True
-    while run:
-        pg.time.delay(100)
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                run = False
-                pg.quit()
-            if event.type == pg.MOUSEBUTTONDOWN:
-                run = False
-                runner.falling = False
-                runner.sliding = False
-                runner.jumping = False
-
-        win.blit(bg, (0,0))
-        largeFont = pg.font.SysFont('comicsans', 80)
-        lastScore = largeFont.render('Best Score: ' + str(updateFile()),1,(255,255,255))
-        currentScore = largeFont.render('Score: '+ str(score),1,(255,255,255))
-        win.blit(lastScore, (W/2 - lastScore.get_width()/2,150))
-        win.blit(currentScore, (W/2 - currentScore.get_width()/2, 240))
-        pg.display.update()
-    score = 0
+    def draw(self, win):
+        if self.jumping:
+            self.y -= self.jumpList[self.jumpCount] * 1.2
+            win.blit(self.jump[self.jumpCount//18], (self.x,self.y))
+            self.jumpCount += 1
+            if self.jumpCount > 108:
+                self.jumpCount = 0
+                self.jumping = False
+                self.runCount = 0
+        elif self.sliding or self.slideUp:
+            if self.slideCount < 20:
+                self.y += 1
+            elif self.slideCount == 80:
+                self.y -= 19
+                self.sliding = False
+                self.slideUp = True
+            if self.slideCount >= 110:
+                self.slideCount = 0
+                self.slideUp = False
+                self.runCount = 0
+            win.blit(self.slide[self.slideCount//10], (self.x,self.y))
+            self.slideCount += 1
+            
+        else:
+            if self.runCount > 42:
+                self.runCount = 0
+            win.blit(self.run[self.runCount//6], (self.x,self.y))
+            self.runCount += 1
 
 
 def redrawWindow():
-    largeFont = pg.font.SysFont('comicsans', 30)
-    win.blit(bg, (bgX, 0))
-    win.blit(bg, (bgX2,0))
-    text = largeFont.render('Score: ' + str(score), 1, (255,255,255))
-    runner.draw(win)
-    for obstacle in obstacles:
-        obstacle.draw(win)
+    win.blit(bg, (bgX, 0))  
+    win.blit(bg, (bgX2, 0))
+    runner.draw(win) # NEW
+    pygame.display.update() 
 
-    win.blit(text, (700, 10))
-    pg.display.update()
+# Call this from the game loop!
 
-
-pg.time.set_timer(USEREVENT+1, 500)
-pg.time.set_timer(USEREVENT+2, 3000)
-speed = 30
-
-score = 0
+pygame.time.set_timer(USEREVENT+1, 500) # Sets the timer for 0.5 seconds
+# This should go above the game loop
+runner = player(200, 313, 64, 64)
+# This should go above our game loop
 
 run = True
-runner = player(200, 313, 64, 64)
-
-obstacles = []
-pause = 0
-fallSpeed = 0
+speed = 30  # NEW
 
 while run:
-    if pause > 0:
-        pause += 1
-        if pause > fallSpeed * 2:
-            endScreen()
-        
-    score = speed//10 - 3
-
-    for obstacle in obstacles:
-        if obstacle.collide(runner.hitbox):
-            runner.falling = True
-            
-            if pause == 0:
-                pause = 1
-                fallSpeed = speed
-        if obstacle.x < -64:
-            obstacles.pop(obstacles.index(obstacle))
-        else:
-            obstacle.x -= 1.4
-    
-    bgX -= 1.4
+    redrawWindow() 
+    bgX -= 1.4  
     bgX2 -= 1.4
 
-    if bgX < bg.get_width() * -1:
+    if bgX < bg.get_width() * -1:  
         bgX = bg.get_width()
-    if bgX2 < bg.get_width() * -1:
-        bgX2 = bg.get_width() 
     
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            pg.quit()
-            run = False
-            
-        if event.type == USEREVENT+1:
-            speed += 1
-            
-        if event.type == USEREVENT+2:
-            r = random.randrange(0,2)
-            if r == 0:
-                obstacles.append(wall(810, 310, 64, 64))
-            elif r == 1:
-                obstacles.append(spike(810, 0, 48, 310))
-                
-    if runner.falling == False:
-        keys = pg.key.get_pressed()
+    if bgX2 < bg.get_width() * -1:
+        bgX2 = bg.get_width()
 
-        if keys[pg.K_SPACE] or keys[pg.K_UP]:
-            if not(runner.jumping):
-                runner.jumping = True
+    for event in pygame.event.get():  
+        if event.type == pygame.QUIT: 
+            run = False    
+            pygame.quit() 
+            quit()
+    
+        if event.type == USEREVENT+1: # Checks if timer goes off
+            speed += 1 # Increases speed
 
-        if keys[pg.K_DOWN]:
-            if not(runner.sliding):
-                runner.sliding = True
+    keys = pygame.key.get_pressed()
 
-    clock.tick(speed)
-    redrawWindow()
+    if keys[pygame.K_SPACE] or keys[pygame.K_UP]: # If user hits space or up arrow key
+        if not(runner.jumping):  # If we are not already jumping
+            runner.jumping = True
+
+    if keys[pygame.K_DOWN]:  # If user hits down arrow key
+        if not(runner.sliding):  # If we are not already sliding
+            runner.sliding = True
+
+    clock.tick(speed)  # NEW
+
+    for event in pygame.event.get():  
+        if event.type == pygame.QUIT: 
+            run = False    
+            pygame.quit() 
+            quit()

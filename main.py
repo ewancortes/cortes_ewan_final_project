@@ -3,28 +3,26 @@ from pygame.locals import *
 import os
 import sys
 import math
+import spritesheet
+from settings import *
 
 pygame.init()
-
-W, H = 1920, 1080
-win = pygame.display.set_mode((W,H))
-pygame.display.set_caption('Side Scroller')
-
-bg = pygame.image.load(os.path.join('images','bg.png')).convert()
 bgX = 0
 bgX2 = bg.get_width()
 
 clock = pygame.time.Clock()
+FPS = 120
+frames = FPS/12
 
 class player(object):
-    run = [pygame.image.load(os.path.join('images', str(x) + '.png')) for x in range(8,16)]
-    jump = [pygame.image.load(os.path.join('images', str(x) + '.png')) for x in range(1,8)]
-    slide = [pygame.image.load(os.path.join('images', 'S1.png')),pygame.image.load(os.path.join('images', 'S2.png')),pygame.image.load(os.path.join('images', 'S2.png')),pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S2.png')),pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S3.png')), pygame.image.load(os.path.join('images', 'S4.png')), pygame.image.load(os.path.join('images', 'S5.png'))]
+    run = [win.blit(run1, (0, 0)), win.blit(run2, (72, 0)), win.blit(run3, (150, 0)), win.blit(run4, (250, 0)), win.blit(run5, (250, 0)), win.blit(run6, (250, 0)), win.blit(run7, (250, 0)), win.blit(run8, (250, 0))]
+    jump = [SpriteStripAnim('images/Soldier_1/Idle.png', (0,0,24,24), 8, 1, True, frames)]
+    # slide = [pygame.image.load(os.path.join('images', 'S1.png')),pygame.image.load(os.path.join('images', 'S2.png')),pygame.image.load(os.path.join('images', 'S2.png')),pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S2.png')),pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S2.png')), pygame.image.load(os.path.join('images', 'S3.png')), pygame.image.load(os.path.join('images', 'S4.png')), pygame.image.load(os.path.join('images', 'S5.png'))]
     jumpList = [1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-2,-2,-2,-2,-2,-2,-2,-2,-2,-2,-2,-2,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-3,-4,-4,-4,-4,-4,-4,-4,-4,-4,-4,-4,-4]
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
-        self.width = width
+        self.width = width  
         self.height = height
         self.jumping = False
         self.sliding = False
@@ -78,6 +76,9 @@ runner = player(200, 313, 64, 64)
 
 run = True
 speed = 30  # NEW
+n = 0
+run[n].iter()
+image = run[n].next()
 
 while run:
     redrawWindow() 

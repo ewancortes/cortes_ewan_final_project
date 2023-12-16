@@ -74,7 +74,7 @@ class player(object):
                 self.runCount = 0
             win.blit(self.run[self.runCount//6], (self.x,self.y))
             self.runCount += 1
-            self.hitbox = (self.x+ 28, self.y+39, self.width-24, self.height-13)
+            self.hitbox = (self.x+ 34, self.y+39, self.width-30, self.height-13)
             pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
 
 class saw(object):

@@ -49,7 +49,7 @@ class player(object):
                 self.jumping = False
                 self.runCount = 0
             self.hitbox = (self.x+ 28, self.y+39, self.width-24, self.height-10)
-            pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
+            # pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
         elif self.sliding or self.slideUp:
             if self.slideCount < 20:
                 self.y += 1
@@ -60,7 +60,7 @@ class player(object):
                 self.slideUp = True
             elif self.slideCount > 20 and self.slideCount < 80:
                 self.hitbox = (self.x, self.y+3, self.width-8, self.height-35)
-                pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
+                # pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
 
             if self.slideCount >= 110:
                 self.slideCount = 0
@@ -75,7 +75,7 @@ class player(object):
             win.blit(self.run[self.runCount//6], (self.x,self.y))
             self.runCount += 1
             self.hitbox = (self.x+ 34, self.y+39, self.width-30, self.height-13)
-            pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
+            # pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
 
 class saw(object):
     rotate = [pygame.image.load(os.path.join('images', 'SAW0.png')), pygame.image.load(os.path.join('images', 'SAW0.png')), pygame.image.load(os.path.join('images', 'SAW1.png')), pygame.image.load(os.path.join('images', 'SAW2.png')), pygame.image.load(os.path.join('images', 'SAW2.png')), pygame.image.load(os.path.join('images', 'SAW2.png')), pygame.image.load(os.path.join('images', 'SAW3.png')), pygame.image.load(os.path.join('images', 'SAW3.png')), pygame.image.load(os.path.join('images', 'SAW0.png')), pygame.image.load(os.path.join('images', 'SAW1.png')), pygame.image.load(os.path.join('images', 'SAW2.png')), pygame.image.load(os.path.join('images', 'SAW2.png')), pygame.image.load(os.path.join('images', 'SAW3.png')), pygame.image.load(os.path.join('images', 'SAW3.png')), pygame.image.load(os.path.join('images', 'SAW0.png')), pygame.image.load(os.path.join('images', 'SAW1.png')), pygame.image.load(os.path.join('images', 'SAW2.png')), pygame.image.load(os.path.join('images', 'SAW2.png')), pygame.image.load(os.path.join('images', 'SAW3.png')), pygame.image.load(os.path.join('images', 'SAW3.png'))]
@@ -90,7 +90,7 @@ class saw(object):
 
     def draw(self, win):
         self.hitbox = (self.x + 10, self.y+ 40, self.width - 20, self.height - 40)
-        pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
+        # pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
         if self.rotateCount >= 13:
             self.rotateCount = 0
         win.blit(pygame.transform.scale(self.rotate[self.rotateCount//2], (64,64)), (self.x,self.y))
@@ -107,7 +107,7 @@ class spike(saw):
 
     def draw(self, win):
         self.hitbox = (self.x + 10, self.y, 28,315)
-        pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
+        # pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
         win.blit(self.img, (self.x, self.y))
 
     def collide(self, rect):
@@ -170,15 +170,13 @@ def redrawWindow():
     win.blit(text, (700, 10))
     pygame.display.update() 
 
-# Call this from the game loop!
-
 pygame.time.set_timer(USEREVENT+1, 500) # Sets the timer for 0.5 seconds
 pygame.time.set_timer(USEREVENT+2, 3000)
-speed = 30  # NEW
-# This should go above the game loop
+speed = 50  
+
 
 score = 0
-# This should go above our game loop
+
 
 run = True
 runner = player(960, 680, 64, 64)
@@ -241,6 +239,6 @@ while run:
         if not(runner.sliding):  # If we are not already sliding
             runner.sliding = True
 
-    clock.tick(speed)  # NEW
+    clock.tick(speed)
     redrawWindow() 
     

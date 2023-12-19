@@ -11,22 +11,20 @@ Side scrolling game in which you must get as far as possible. Player must avoid 
 ### Dependencies
 
 * Windows 11
-* Python _____
-* Pygame
-* 
+* Python 3.11.4
+* Pygame 2.5.2
+* Necessary Images
 
 ### Installing
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+* GitHub
+* Visual Studio Code
 
 ### Executing program
 
-* How to run the program
-* Step-by-step bullets
-```
-code blocks for commands
-```
+* Open in Visual Studio
+* Open Main.py
+* Go to top right and run
 
 ## Help
 
@@ -39,26 +37,29 @@ command to run if program contains helper info
 
 Contributors names and contact info
 
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
+Ewan Cortes
+ewancortes@gmail.com
 
 ## Version History
 
+* 0.5
+    * Final Version
+* 0.4
+    * Various Bug fixes and debugging
+* 0.3
+    * New Start for Code
 * 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
+    * Test 1
 * 0.1
     * Initial Release
 
 ## License
 
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
+This project is licensed under the MIT License - see the LICENSE.md file for details
 
 ## Acknowledgments
 
 Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+* [techwithtim](https://www.techwithtim.net/tutorials/game-development-with-python/side-scroller-pygame/random-object-generation)
+* [CraftPix](https://craftpix.net/freebies/)
+* [rossning92](https://github.com/topics/chrome-dino-game)
